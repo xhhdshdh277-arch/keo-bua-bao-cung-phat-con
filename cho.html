@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấm, Lá, Kéo cùng Phát Con (Bot Mất Dạy)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #ff4500;
+            font-size: 2.5em;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .game-container {
+            background: #fff;
+            border: 2px solid #ff4500;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .choices {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        button {
+            background: #ff4500;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background: #e03e00;
+            transform: scale(1.1);
+        }
+        #result {
+            font-size: 1.5em;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+        #score {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        #mocking {
+            font-size: 1.8em;
+            color: #ff0000;
+            margin-top: 20px;
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .emoji-blast {
+            font-size: 3em;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+        .choice-emoji {
+            font-size: 2em;
+            margin: 0 10px;
+        }
+        audio {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Đấm, Lá, Kéo cùng Phát Con (Bot Siêu Mất Dạy!)</h1>
+    <div class="game-container">
+        <p>Ê con gà, dám chơi với tao không? Chọn đi: Đấm (✊), Lá (✋), Kéo (✌️). Tao random mà, nhưng mày sẽ thua thôi! 😈</p>
+        <div class="choices">
+            <button onclick="play('Đấm')">Đấm ✊</button>
+            <button onclick="play('Lá')">Lá ✋</button>
+            <button onclick="play('Kéo')">Kéo ✌️</button>
+        </div>
+        <div id="result"></div>
+        <div id="score">Thắng: 0 | Thua: 0 | Hòa: 0</div>
+        <div id="mocking"></div>
+    </div>
+
+    <!-- Background Music - New upbeat 8-bit adventure music, higher quality -->
+    <audio id="bgMusic" loop autoplay>
+        <source src="https://www.fesliyanstudios.com/play-mp3/2282" type="audio/mpeg"> <!-- 8 Bit Adventure - Adventurous and fun 8-bit track -->
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Sound Effects - Updated with different meme sounds -->
+    <audio id="loseSound">
+        <source src="https://www.myinstants.com/media/sounds/that-was-easy.mp3" type="audio/mpeg"> <!-- "That was easy!" meme for losing -->
+    </audio>
+    <audio id="winSound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg"> <!-- Kept win sound -->
+    </audio>
+    <audio id="tieSound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg"> <!-- Kept tie sound -->
+    </audio>
+    <audio id="mockSound">
+        <source src="https://www.myinstants.com/media/sounds/haha-funny-laugh.mp3" type="audio/mpeg"> <!-- Funny haha laugh for mocking -->
+    </audio>
+
+    <script>
+        let wins = 0;
+        let losses = 0;
+        let ties = 0;
+        const choices = ['Đấm', 'Lá', 'Kéo'];
+        const emojis = {
+            'Đấm': '✊',
+            'Lá': '✋',
+            'Kéo': '✌️'
+        };
+        const mockingMessages = [
+            "Ê gà, mày chọn <span class='choice-emoji'>{userEmoji}</span> tao chọn <span class='choice-emoji'>{botEmoji}</span>. Thua rồi con! Dễ òm! 😂",
+            "Haha, <span class='choice-emoji'>{userEmoji}</span> vs <span class='choice-emoji'>{botEmoji}</span>? Mày non lắm, tao win! Đi học lại đi! 🤡",
+            "Thua nữa hả? <span class='choice-emoji'>{botEmoji}</span> đè bẹp <span class='choice-emoji'>{userEmoji}</span> của mày. Tao là vua! 👑😜",
+            "Con gà này, <span class='choice-emoji'>{userEmoji}</span> yếu xìu trước <span class='choice-emoji'>{botEmoji}</span>. Thua sml! 🤦‍♂️",
+            "Lại thua! <span class='choice-emoji'>{botEmoji}</span> > <span class='choice-emoji'>{userEmoji}</span>. Mày tuổi gì đấu với Phát Con? 🐔"
+        ];
+
+        function play(userChoice) {
+            const botChoice = choices[Math.floor(Math.random() * 3)];
+            const userEmoji = emojis[userChoice];
+            const botEmoji = emojis[botChoice];
+            let resultText = '';
+            let isLoss = false;
+
+            if (userChoice === botChoice) {
+                resultText = `Hòa! Cả hai chọn <span class='choice-emoji'>${userEmoji}</span>. May mắn thôi, lần sau tao đấm mày! 😏`;
+                ties++;
+                document.getElementById('tieSound').play();
+            } else if (
+                (userChoice === 'Đấm' && botChoice === 'Kéo') ||
+                (userChoice === 'Lá' && botChoice === 'Đấm') ||
+                (userChoice === 'Kéo' && botChoice === 'Lá')
+            ) {
+                resultText = `Mày thắng? <span class='choice-emoji'>${userEmoji}</span> thắng <span class='choice-emoji'>${botEmoji}</span>. Lần này thôi, tao nhường đấy! 😤`;
+                wins++;
+                document.getElementById('winSound').play();
+            } else {
+                const randomMock = mockingMessages[Math.floor(Math.random() * mockingMessages.length)]
+                    .replace('{userEmoji}', userEmoji)
+                    .replace('{botEmoji}', botEmoji);
+                resultText = randomMock;
+                losses++;
+                isLoss = true;
+                document.getElementById('loseSound').play();
+                document.getElementById('mockSound').play();
+            }
+
+            document.getElementById('result').innerHTML = resultText;
+            document.getElementById('score').innerHTML = `Thắng: ${wins} | Thua: ${losses} | Hòa: ${ties}`;
+
+            // Mocking levels with surprises
+            let mockingText = '';
+            if (losses === 3) {
+                mockingText = '<span class="emoji-blast">👎🏿🤣</span> Thua 3 lần rồi con! Mày gà vl! Bất ngờ chưa? Haha!';
+                triggerConfetti();
+            } else if (losses === 6) {
+                mockingText = 'Gà thua bot :))) Thua 6 lần, mày là gà công nghiệp à? Sinh động chưa, tao cười ỉa! 🐔💩';
+                document.body.style.backgroundColor = '#ffdddd';
+                setTimeout(() => document.body.style.backgroundColor = '#f0f0f0', 3000);
+            } else if (losses === 10) {
+                mockingText = 'Hơi non, tuổi l! Thua 10 lần, mày tuổi gì? Tao là boss, mày là noob! 🎉🤣 Non vl!';
+                alert('Bất ngờ nhé! Mày thua 10 lần, tao tặng mày huy hiệu "Gà Mãi Mãi"! 🏆🐔');
+            } else if (losses % 2 === 0 && losses > 0) {
+                const extraMocks = ['Thua nữa đi con!', 'Dễ òm cho tao!', 'Mày yếu quá!', 'Haha, non!'];
+                mockingText = extraMocks[Math.floor(Math.random() * extraMocks.length)];
+            }
+
+            document.getElementById('mocking').innerHTML = mockingText;
+
+            // Play background music if not playing
+            const bgMusic = document.getElementById('bgMusic');
+            if (bgMusic.paused) bgMusic.play();
+        }
+
+        // Surprise confetti function for fun
+        function triggerConfetti() {
+            for (let i = 0; i < 100; i++) {
+                let confetti = document.createElement('div');
+                confetti.style.position = 'absolute';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.background = `hsl(${Math.random()*360}, 100%, 50%)`;
+                confetti.style.top = `${Math.random()*100}vh`;
+                confetti.style.left = `${Math.random()*100}vw`;
+                confetti.style.animation = 'fall 2s linear';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        // Add fall animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fall {
+                0% { transform: translateY(-100vh) rotate(0deg); }
+                100% { transform: translateY(100vh) rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
